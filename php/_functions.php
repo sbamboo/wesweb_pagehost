@@ -1,5 +1,21 @@
 <?php
 
+function intBoolToString($intBool,$capitalize=true) {
+    if ($intBool == 1 || $intBool == true) {
+        if ($capitalize == true) {
+            return "True";
+        } else {
+            return "true";
+        }
+    } else {
+        if ($capitalize == true) {
+            return "False";
+        } else {
+            return "false";
+        }
+    }
+}
+
 function connectDB(array $sqlargs) {
     // Extracting values from the arg array
     list($sql_host, $sql_uname, $sql_password, $sql_database, $sql_table) = $sqlargs;
@@ -19,36 +35,49 @@ function connectDB(array $sqlargs) {
     } else {
         return array(True,"Successfully connected to database",$mysqli);
     }
+} # returning array(bool $success, string $msg, $sqlConnectionInstance)
+
+function validateDBConnection(array $connectionReturn) {
+    list($success,$msg,$instance) = $connectionReturn;
+    if ($success == 1 || $success == true) {
+        return $instance;
+    } else {
+        return $msg;
+    }
 }
 
-function getClientNameFromID() {}
+function getClientNameFromID($dbInstance,int $clientID) {} # returns dispname if set otherwise username
 
-function getPosts() {}
+function doesUsernameExist($dbInstance,string $username) {}
 
-function validateClientCredentials() {}
+function doesClientNameExist($dbInstance,string $dispname) {}
 
-function getClientData() {}
+function getPosts($dbInstance) {}
 
-function setClientData() {}
+function validateClientCredentials($dbInstance,string $username,string $password) {}
 
-function getPostsByClient() {}
+function getClientData($dbInstance,int $clientID) {}
 
-function getPostsWhereClientIsAccessee() {}
+function setClientData($dbInstance,int $clientID,string $username=null, string $password=null, $dispname=null, $profpic=null) {}
 
-function getPostData() {}
+function getPostsByClient($dbInstance,int $clientID) {} # returning array of postids
 
-function setPostData() {}
+function getPostsWhereClientIsAccessee($dbInstance,int $clientID) {} # returning array of postids
 
-function getPostAccessees() {}
+function getPostData($dbInstance,int $postID) {}
 
-function addPostAccessee() {}
+function setPostData($dbInstance,int $postID,string $header=null,string $content=null,int $AuthorID=null,int $contentType=null) {}
 
-function remPostAccessee() {}
+function getPostAccessees($dbInstance,int $postID) {}
 
-function getCommentsForPost() {}
+function addPostAccessee($dbInstance,int $postID,int $clientID) {}
 
-function addComment() {}
+function remPostAccessee($dbInstance,int $postID,int $clientID) {}
 
-function remComment() {}
+function getCommentsForPost($dbInstance,int $postID) {}
+
+function addComment($dbInstance,int $parentID, int $authorID,string $content,bool $isForPost) {}
+
+function remComment($dbInstance,int $commentID) {}
 
 ?>

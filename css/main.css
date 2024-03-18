@@ -1,0 +1,15 @@
+* {
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+.flex-horiz {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-vertic {
+    display: flex;
+    flex-direction: row;
+}

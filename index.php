@@ -7,6 +7,6 @@ $sqlargs = array("localhost","root","","pagehost");
 $conRet = validateDBConnection( connectDB($sqlargs) );
 if (is_string($conRet)) { echo $conRet;$dbInstance=null; } else { $dbInstance = $conRet; }
 
-$res = getPostData($dbInstance, "posts", 1);
+$res = addPostAccessee($dbInstance, "accessees", 1, 2);
 print_r($res);
 ?>

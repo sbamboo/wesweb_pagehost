@@ -41,25 +41,50 @@ function validateDBConnection(array $connectionReturn) {
     return $msg;
 }
 
-function getClientNameFromID($dbInstance,$dbTable, int $clientID) {
-    $sqlcmd = "SELECT Username,DispName FROM " . $dbTable . " WHERE ID=?";
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
+function functionExSQL($dbInstance,string $sqlcmd,bool $hasMultipleReturn=false,bool $prepare=false,string $bindTypesString="",array $prepareStatements=array(),bool $retExecuteRet=false) {
+    if ($prepare == true) {
+        // We Create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
+        $prepped_statement = $dbInstance->prepare($sqlcmd);
+        // Make bindParams array
+        $bindParams = array_merge(array($bindTypesString),$prepareStatements);
+        // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type.
+        // This effectively says to php/sql that the content must be string, making injection less likely.
+        $prepped_statement->bind_param(...$bindParams);
+        // Execute the prepared statement (Same as query)
+        $executeReturn = $prepped_statement->execute();
+        // If enabled return the value now as boolean
+        if ($retExecuteRet == true) {
+            $toRet = false;
+            if ($executeReturn === TRUE) {
+                $toRet = true;
+            }
+            // Close the statement connection since we don't need this connection to our SQL database.
+            $prepped_statement->close();
+            return $toRet;
+        }
+        // Otherwise get the result
+        $resultF = $prepped_statement->get_result();
+        // Close the statement connection since we don't need this connection to our SQL database.
+        $prepped_statement->close();
+    } else {
+        $resultF = $dbInstance->query($sqlcmd);
+    }
+    // Grab multiple results if asked
+    if ($hasMultipleReturn == true) {
+        $results = array();
+        while ($res = $resultF->fetch_assoc()) {
+            $results[] = $res;
+        }
+        return $results;
+    }
+    // Otherwise return the first one
+    return $resultF->fetch_assoc();
+}
 
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("i", $clientID);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
-
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
+function getClientNameFromID($dbInstance,$userTable, int $clientID) {
+    $sqlcmd = "SELECT Username,DispName FROM " . $userTable . " WHERE ID=?";
+    
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($clientID));
 
     // Retrive result
     if (in_array("DispName",array_keys($result)) && $result["DispName"] != "" && $result["DispName"] != null) {
@@ -68,124 +93,63 @@ function getClientNameFromID($dbInstance,$dbTable, int $clientID) {
     return $result["Username"];
 } # returns dispname if set otherwise username
 
-function doesUsernameExist($dbInstance,$dbTable,string $username) {
-    $sqlcmd = "SELECT Username FROM " . $dbTable . " WHERE Username=?";
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
-
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("s", $username);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
-
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
-
-    // Retrive result
-    if (empty($result)) {
-        return false;
-    }
-    return true;
-}
-
-function doesClientNameExist($dbInstance,$dbTable,string $dispname) {
-    $sqlcmd = "SELECT DispName FROM " . $dbTable . " WHERE DispName=?";
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
-
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("s", $dispname);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
-
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
-
-    // Retrive result
-    if (empty($result)) {
-        return false;
-    }
-    return true;
-}
-
-function getPosts($dbInstance,$dbTable) {
-    $sqlcmd = "SELECT * FROM " . $dbTable;
-
-    // Get the result from the query.
-    $result = $dbInstance->query($sqlcmd); // Get Result
-    $result = $result->fetch_assoc();
-
-    return $result;
-}
-
-function validateClientCredentials($dbInstance,$dbTable,string $username,string $password) {
-    $sqlcmd = "SELECT Username,Password FROM " . $dbTable . " WHERE Username=? AND Password=?";
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
-
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("ss", $username,$password);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
-
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
-
-    // Retrive result
-    if (empty($result)) {
-        return false;
-    }
-    return true;
-}
-
-function getClientData($dbInstance,$dbTable,int $clientID) {
-    $sqlcmd = "SELECT * FROM " . $dbTable . " WHERE ID=?";
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
-
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("i", $clientID);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
+function doesUsernameExist($dbInstance,$userTable,string $username) {
+    $sqlcmd = "SELECT Username FROM " . $userTable . " WHERE Username=?";
     
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"s",array($username));
 
     // Retrive result
-    return $result;
+    if (empty($result)) {
+        return false;
+    }
+    return true;
 }
 
-function setClientData($dbInstance,$dbTable,int $clientID,string $username=null, string $password=null, $dispname=null, $profpic=null) {
+function doesClientNameExist($dbInstance,$userTable,string $dispname) {
+    $sqlcmd = "SELECT DispName FROM " . $userTable . " WHERE DispName=?";
+    
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"s",array($dispname));
+
+    // Retrive result
+    if (empty($result)) {
+        return false;
+    }
+    return true;
+}
+
+function getPosts($dbInstance,$postTable) {
+    $sqlcmd = "SELECT * FROM " . $postTable;
+
+    return functionExSQL($dbInstance,$sqlcmd);
+}
+
+function getPostSelData($dbInstance,$postTable) {
+    $sqlcmd = "SELECT ID,Header,AuthorID FROM " . $postTable;
+
+    return functionExSQL($dbInstance,$sqlcmd);
+}
+
+function validateClientCredentials($dbInstance,$userTable,string $username,string $password) {
+    $sqlcmd = "SELECT Username,Password FROM " . $userTable . " WHERE Username=? AND Password=?";
+    
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"ss",array($username,$password));
+
+    // Retrive result
+    if (empty($result)) {
+        return false;
+    }
+    return true;
+}
+
+function getClientData($dbInstance,$userTable,int $clientID) {
+    $sqlcmd = "SELECT * FROM " . $userTable . " WHERE ID=?";
+
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($clientID));
+}
+
+function setClientData($dbInstance,$userTable,int $clientID,string $username=null, string $password=null, $dispname=null, $profpic=null) {
     // Update query with prepared statement
-    $sql = "UPDATE " . $dbTable . " SET ";
+    $sql = "UPDATE " . $userTable . " SET ";
     $params = array();
     if ($username !== null) {
         $sql .= "username=?, ";
@@ -204,96 +168,186 @@ function setClientData($dbInstance,$dbTable,int $clientID,string $username=null,
         $params[] = $profpic;
     }
     $sql = rtrim($sql, ", ") . " WHERE id=?";
-    $stmt = $dbInstance->prepare($sql);
     
     // Dynamically bind parameters based on the provided values
     $bind_types = str_repeat("s", count($params)) . "i";
-    $bind_params = array_merge(array($bind_types), $params, array($clientID));
-    print_r($sql);
-    $stmt->bind_param(...$bind_params);
+    $bind_params = array_merge($params, array($clientID));
 
-    $toRet = false;
-    if ($stmt->execute() === TRUE) {
-        $toRet = true;
-    }
+    $result = functionExSQL($dbInstance,$sql,False,True,$bind_types,$bind_params,True);
 
-    // Close statement and return
-    $stmt->close();
-    return $toRet;
+    return $result;
+}
+
+function remClient($dbInstance,$userTable,int $clientID) {
+    $sqlcmd = "DELETE FROM " . $userTable . " WHERE ID=?";
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($clientID),True);
 }
 
 function getPostsByClient($dbInstance,$userTable,$postTable,int $clientID) {
-    $sqlcmd = "SELECT posts.ID AS ID,posts.Header AS Header,posts.Content AS Content,posts.AuthorID AS AuthorID,posts.ContentType as ContentType FROM " . $postTable . " JOIN " . $userTable . " WHERE " . $postTable . ".AuthorID = " . $userTable . ".ID";
+    $sqlcmd = "SELECT " . $postTable . ".ID AS ID," . $postTable . ".Header AS Header," . $postTable . ".Content AS Content," . $postTable . ".AuthorID AS AuthorID," . $postTable . ".ContentType as ContentType FROM " . $postTable . " JOIN " . $userTable . " WHERE " . $postTable . ".AuthorID = " . $userTable . ".ID";
     
-    // Get the result from the query.
-    $result = $dbInstance->query($sqlcmd); // Get Result
-    $result = $result->fetch_assoc();
-
-    return $result;
+    return functionExSQL($dbInstance,$sqlcmd,True);
 } # returning array of postids
 
-function getPostsWhereClientIsAccessee($dbInstance,$postTable,$accesseesTable,int $clientID) {
-    $sqlcmd = "SELECT posts.ID AS ID,posts.Header AS Header,posts.Content AS Content,posts.AuthorID AS AuthorID,posts.ContentType as ContentType FROM " . $accesseesTable . " JOIN " . $postTable . " WHERE " . $postTable . ".ID = " . $accesseesTable . ".PostID AND " . $accesseesTable . ".UserID = ?;";
+function getPostsWhereClientIsAccessee($dbInstance,$postTable,$accesseeTable,int $clientID) {
+    $sqlcmd = "SELECT " . $postTable . ".ID AS ID," . $postTable . ".Header AS Header," . $postTable . ".Content AS Content," . $postTable . ".AuthorID AS AuthorID," . $postTable . ".ContentType as ContentType FROM " . $accesseeTable . " JOIN " . $postTable . " WHERE " . $postTable . ".ID = " . $accesseeTable . ".PostID AND " . $accesseeTable . ".UserID = ?;";
     
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
-
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("i", $clientID);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
-    
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
-
-    // Retrive result
-    return $result;
+    return functionExSQL($dbInstance,$sqlcmd,True,True,"i",array($clientID));
 } # returning array of postids
 
-function getPostData($dbInstance,$dbTable,int $postID) {
-    $sqlcmd = "SELECT * FROM " . $dbTable . " WHERE ID=?";
+function getPostData($dbInstance,$postTable,int $postID) {
+    $sqlcmd = "SELECT * FROM " . $postTable . " WHERE ID=?";
 
-    // We also create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
-    $prepped_statement = $dbInstance->prepare($sqlcmd);
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($postID));
+}
 
-    // We use bind_param to bind our placeholders with their wanted values making sure to use the correct data type:
-    // s: String
-    // This effectively says to php/sql that the content must be string, making injection less likely.
-    $prepped_statement->bind_param("i", $postID);
-
-    // Execute the prepared statement (Same as our query)
-    $prepped_statement->execute();
-
-    // Get the result from the query.
-    $result = $prepped_statement->get_result(); // Get Result
-    $result = $result->fetch_assoc(); // Fetch from the result (I use same var and overwrites only to compat with my earlier method)
+function setPostData($dbInstance,$postTable,int $postID,string $header=null,string $content=null,int $AuthorID=null,int $contentType=null) {
+    // Update query with prepared statement
+    $sql = "UPDATE " . $postTable . " SET ";
+    $paramsS = array();
+    $paramsI = array();
+    if ($header !== null) {
+        $sql .= "Header=?, ";
+        $paramsS[] = $header;
+    }
+    if ($content !== null) {
+        $sql .= "Content=?, ";
+        $paramsS[] = $content;
+    }
+    if ($AuthorID !== null) {
+        $sql .= "AuthorID=?, ";
+        $paramsI[] = $AuthorID;
+    }
+    if ($contentType !== null) {
+        $sql .= "contentType=?, ";
+        $paramsI[] = $contentType;
+    }
+    $sql = rtrim($sql, ", ") . " WHERE id=?";
     
-    // Close the statement connection since we don't need this connection to our SQL database.
-    $prepped_statement->close();
+    // Dynamically bind parameters based on the provided values
+    $bindTypes = str_repeat("s", count($paramsS)) . str_repeat("i", count($paramsI)) . "i";
+    $bindParams = array_merge($paramsS, $paramsI, array($postID));
 
-    // Return
+    $result = functionExSQL($dbInstance,$sql,False,True,$bindTypes,$bindParams,True);
+
     return $result;
 }
 
-function setPostData($dbInstance,int $postID,string $header=null,string $content=null,int $AuthorID=null,int $contentType=null) {}
+function getPostAccessees($dbInstance,$postTable,$accesseeTable,int $postID) {
+    $sqlcmd = "SELECT " . $accesseeTable . ".UserID AS ID FROM " . $accesseeTable . " JOIN " . $postTable . " WHERE " . $postTable . ".ID=?";
+    
+    // Get the result from the query.
+    $results = functionExSQL($dbInstance,$sqlcmd,True,True,"i",array($postID));
 
-function getPostAccessees($dbInstance,int $postID) {}
+    $idlist = array();
+    foreach ($results as $result) {
+        $idlist[] = $result["ID"];
+    }
 
-function addPostAccessee($dbInstance,int $postID,int $clientID) {}
+    return $idlist;
+}
 
-function remPostAccessee($dbInstance,int $postID,int $clientID) {}
+function checkIfClientIsAccesseeByID($dbInstance,$accesseeTable,int $postID, int $clientID) {
+    $sqlcmd = "SELECT * FROM " . $accesseeTable . " WHERE PostID=? AND UserID=?";
+    
+    // Get the result from the query.
+    $results = functionExSQL($dbInstance,$sqlcmd,True,True,"ii",array($postID,$clientID));
 
-function getCommentsForPost($dbInstance,int $postID) {}
+    if (count($results) >= 1) {
+        return true;
+    }
+    return false;
+}
 
-function addComment($dbInstance,int $parentID, int $authorID,string $content,bool $isForPost) {}
+function addPostAccessee($dbInstance,$accesseeTable,int $postID,int $clientID) {
+    // Only add if not existing so check first
+    if (checkIfClientIsAccesseeByID($dbInstance,$accesseeTable,$postID,$clientID) == true) {
+        return false;
+    } else {
+        $sqlcmd = "INSERT INTO " . $accesseeTable . " (PostID,UserID) VALUES (?,?)";
+        return functionExSQL($dbInstance,$sqlcmd,False,True,"ii",array($postID,$clientID),True);
+    }
+}
 
-function remComment($dbInstance,int $commentID) {}
+function remPostAccessee($dbInstance,$accesseeTable,int $postID,int $clientID) {
+    // Only add if not existing so check first
+    if (checkIfClientIsAccesseeByID($dbInstance,$accesseeTable,$postID,$clientID) == true) {
+        $sqlcmd = "DELETE FROM " . $accesseeTable . " WHERE PostID=? AND UserID=?";
+        return functionExSQL($dbInstance,$sqlcmd,False,True,"ii",array($postID,$clientID),True);
+    } else {
+        return false;
+    }
+}
 
-?>
+function checkIfCommentIsForPost($dbInstance,$commentTable,int $commentID) {
+    $sqlcmd = "SELECT IsForPost FROM " . $commentTable . " WHERE ID=?";
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($commentID));
+    if ($result == 1) {
+        return true;
+    }
+    return false;
+}
+
+function getCommentsForPost($dbInstance,$commentTable,int $postID) {
+    $sqlcmd = "SELECT * FROM " . $commentTable . " WHERE ParentID=? AND IsForPost=1";
+    return functionExSQL($dbInstance,$sqlcmd,True,True,"i",array($postID));
+}
+
+function getCommentsForComment($dbInstance,$commentTable,int $commentID) {
+    $sqlcmd = "SELECT * FROM " . $commentTable . " WHERE ParentID=? AND IsForPost=0";
+    return functionExSQL($dbInstance,$sqlcmd,True,True,"i",array($commentID));
+}
+
+function addComment($dbInstance,$commentTable,int $parentID, int $authorID,string $content,bool $isForPost) {
+    $sqlcmd = "INSERT INTO " . $commentTable . " (Content,AuthorID,ParentID,IsForPost) VALUES (????)";
+    // Make isforPost into tinyint
+    $isForPostINT = 1;
+    if ($isForPost == false) {
+        $isForPostINT = 0;
+    }
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"siii",array($content,$authorID,$parentID,$isForPostINT),True);
+}
+
+function setComment($dbInstance,$commentTable,int $commentID,string $content=null,int $authorID=null,int $parentID=null,bool $isForPost=null) {
+    // Make isForPost int
+    $isForPostINT = null;
+    if ($isForPost == false) {
+        $isForPostINT = 0;
+    } elseif ($isForPost == true) {
+        $isForPostINT = 1;
+    }
+    // Update query with prepared statement
+    $sql = "UPDATE " . $commentTable . " SET ";
+    $paramsS = array();
+    $paramsI = array();
+    if ($content !== null) {
+        $sql .= "Content=?, ";
+        $paramsS[] = $content;
+    }
+    if ($authorID !== null) {
+        $sql .= "AuthorID=?, ";
+        $paramsI[] = $authorID;
+    }
+    if ($parentID !== null) {
+        $sql .= "ParentID=?, ";
+        $paramsI[] = $parentID;
+    }
+    if ($isForPostINT !== null) {
+        $sql .= "IsForPost=?, ";
+        $paramsI[] = $isForPostINT;
+    }
+    $sql = rtrim($sql, ", ") . " WHERE id=?";
+    
+    // Dynamically bind parameters based on the provided values
+    $bindTypes = str_repeat("s", count($paramsS)) . str_repeat("i", count($paramsI)) . "i";
+    $bindParams = array_merge($paramsS, $paramsI, array($commentID));
+
+    $result = functionExSQL($dbInstance,$sql,False,True,$bindTypes,$bindParams,True);
+
+    return $result;
+}
+
+function remComment($dbInstance,$commentTable,int $commentID) {
+    $sqlcmd = "DELETE FROM " . $commentTable . " WHERE ID=?";
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($commentID),True);
+}

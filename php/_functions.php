@@ -93,6 +93,16 @@ function getClientNameFromID($dbInstance,$userTable, int $clientID) {
     return $result["Username"];
 } # returns dispname if set otherwise username
 
+function getClientIDFromName($dbInstance,$userTable, string $username) {
+    $sqlcmd = "SELECT ID FROM " . $userTable . " WHERE Username=?";
+    
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"s",array($username));
+
+    // Retrive result
+    return $result["ID"];
+} # returns dispname if set otherwise username
+
+
 function doesUsernameExist($dbInstance,$userTable,string $username) {
     $sqlcmd = "SELECT Username FROM " . $userTable . " WHERE Username=?";
     
@@ -120,13 +130,13 @@ function doesClientNameExist($dbInstance,$userTable,string $dispname) {
 function getPosts($dbInstance,$postTable) {
     $sqlcmd = "SELECT * FROM " . $postTable;
 
-    return functionExSQL($dbInstance,$sqlcmd);
+    return functionExSQL($dbInstance,$sqlcmd,True);
 }
 
 function getPostSelData($dbInstance,$postTable) {
     $sqlcmd = "SELECT ID,Header,AuthorID FROM " . $postTable;
 
-    return functionExSQL($dbInstance,$sqlcmd);
+    return functionExSQL($dbInstance,$sqlcmd,True);
 }
 
 function validateClientCredentials($dbInstance,$userTable,string $username,string $password) {
@@ -178,15 +188,56 @@ function setClientData($dbInstance,$userTable,int $clientID,string $username=nul
     return $result;
 }
 
+function checkIfUsernameExists($dbInstance,$userTable,$username) {
+    $sqlcmd = "SELECT * FROM " . $userTable . " WHERE Username=?";
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"s",array($username));
+    if ($result && $result != "" && $result != null) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function addClient($dbInstance,$userTable,string $username,string $password,string $dispname=null,$profpic=null) {
+    $exi = checkIfUsernameExists($dbInstance,$userTable,$username);
+    if ($exi) {
+        return false;
+    } else {
+        // Update query with prepared statement
+        $sql = "INSERT INTO " . $userTable . " (Username,Password";
+        $esql = ") VALUES (?,?";
+        $bindTypes = "ss";
+        $params = array($username,$password);
+        if ($dispname != null) {
+            $sql .= ",DispName";
+            $esql .= ",?";
+            $bindTypes .= "s";
+            $params[] = $dispname;
+        }
+        if ($profpic != null) {
+            $sql .= ",ProfPic";
+            $bindTypes .= "b";
+            $esql .= ",?";
+            $params[] = $profpic;
+        }
+
+        $sqlcmd = $sql . $esql . ")";
+
+        $result = functionExSQL($dbInstance,$sqlcmd,False,True,$bindTypes,$params,True);
+
+        return $result;
+    }
+}
+
 function remClient($dbInstance,$userTable,int $clientID) {
     $sqlcmd = "DELETE FROM " . $userTable . " WHERE ID=?";
     return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($clientID),True);
 }
 
-function getPostsByClient($dbInstance,$userTable,$postTable,int $clientID) {
-    $sqlcmd = "SELECT " . $postTable . ".ID AS ID," . $postTable . ".Header AS Header," . $postTable . ".Content AS Content," . $postTable . ".AuthorID AS AuthorID," . $postTable . ".ContentType as ContentType FROM " . $postTable . " JOIN " . $userTable . " WHERE " . $postTable . ".AuthorID = " . $userTable . ".ID";
+function getPostsByClient($dbInstance,$postTable,int $clientID) {
+    $sqlcmd = "SELECT * FROM " . $postTable . " WHERE " . $postTable . ".AuthorID=?";
     
-    return functionExSQL($dbInstance,$sqlcmd,True);
+    return functionExSQL($dbInstance,$sqlcmd,True,True,"i",array($clientID));
 } # returning array of postids
 
 function getPostsWhereClientIsAccessee($dbInstance,$postTable,$accesseeTable,int $clientID) {
@@ -350,4 +401,23 @@ function setComment($dbInstance,$commentTable,int $commentID,string $content=nul
 function remComment($dbInstance,$commentTable,int $commentID) {
     $sqlcmd = "DELETE FROM " . $commentTable . " WHERE ID=?";
     return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($commentID),True);
+}
+
+function recursivelyGetComments($dbInstance,$commentTable,array $rootComment) {
+    $tree = array();
+    $subcomments = getCommentsForComment($dbInstance,$commentTable,$rootComment["ID"]);
+    foreach($subcomments as $subcomment) {
+        $tree[] = recursivelyGetComments($dbInstance,$commentTable,$subcomment);
+    }
+    $rootComment["subComments"] = $tree;
+    return $rootComment;
+}
+
+function getCommentTree($dbInstance,$commentTable,int $originalParentPostID) {
+    $tree = array();
+    $comments = getCommentsForPost($dbInstance,$commentTable,$originalParentPostID);
+    foreach ($comments as $comment) {
+        $tree[] = recursivelyGetComments($dbInstance,$commentTable,$comment);
+    }
+    return $tree;
 }

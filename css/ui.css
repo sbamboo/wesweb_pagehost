@@ -1,0 +1,42 @@
+:root {
+    --ui-button-text-color: white;
+    --ui-button-border-color: gray;
+    --ui-horiz-divider-bcolor: #fefefe;
+    --ui-horiz-divider-bcolor2: #2d2d2d;
+}
+
+.ui-button {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid var(--ui-button-border-color);
+    border-radius: 10px;
+}
+
+.ui-button a {
+    color: var(--ui-button-text-color);
+    text-decoration: none;
+}
+.ui-button a:hover,.ui-button a:active,.ui-button a:visited {
+    color: var(--ui-button-text-color);
+    text-decoration: none;
+}
+
+.ui-size-button-big {
+    font-size: 20px;
+}
+
+.ui-smal-hdiv {
+    width: 100%;
+    background-color: var(--ui-horiz-divider-bcolor);
+    height: 1px;
+}
+
+.sized-divider-midtext {
+    width: 100%;
+    background-color: var(--ui-horiz-divider-bcolor2);
+    height: 1px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

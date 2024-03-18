@@ -1,0 +1,82 @@
+#content-main,#comment-field-innerwrapper {
+    padding: 3%;
+    padding-top: 10px;
+    padding-bottom: 5px;
+}
+
+#content-author {
+    margin-bottom: 15px;
+}
+
+#content-author-innerwrapper {
+    border: 1px solid #303030;
+    padding: 5px;
+    width: fit-content;
+}
+
+#content-author-info-preline {
+    margin-left: 5px;
+    margin-right: 5px;
+    font-size: 17px;
+    padding-top: 5px;
+    display: block;
+}
+
+#content-author-img-wrapper img {
+    padding-right: 2px;
+}
+
+#content-author-info {
+    display: block;
+    padding-top: 0px;
+}
+
+#editor-sidebar,#customerpage-sidebar {
+    width: 27vw;
+    border-left: 1px solid gray;
+}
+
+#editor-content,#customerpage-content {
+    width: 73vw;
+}
+
+.comment-wrapper {
+    border-left: 1px solid #3c3c3c;
+    border-bottom: 1px solid #3c3c3c;
+    padding-left: 3px;
+    padding-bottom: 3px;
+    padding-top: 5px;
+}
+
+.comment-author-wrapper {
+    font-size: 16px;
+    color: #da67e9;
+}
+.comment-author-wrapper img {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    object-fit: contain;
+    margin-right: 3px;
+}
+
+.editor-edit-header,.editor-edit-content {
+    background-color: rgba(0,0,0,0);
+    color: #fefefe;
+    width: 90%;
+    border: 1px solid #3c3c3c;
+    padding: 5px;
+}
+.editor-edit-header {
+    font-size: 20px;
+    padding-bottom: 10px;
+    border-bottom: none;
+    padding-bottom: none;
+    height: 20px;
+    overflow: hidden;
+}
+.editor-edit-content {
+    height: 70vh;
+    border-top: none;
+    padding-top: none;
+}

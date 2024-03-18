@@ -1,0 +1,20 @@
+.account-opts-profpic {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+section {
+    padding-left: 10px;
+    padding-top: 5px;
+}
+
+#account-id {
+    border: 1px solid #3c3c3c;
+    padding: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    margin-top: 5px;
+    width: fit-content;
+}

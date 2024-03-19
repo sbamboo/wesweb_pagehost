@@ -41,7 +41,7 @@ function validateDBConnection(array $connectionReturn) {
     return $msg;
 }
 
-function functionExSQL($dbInstance,string $sqlcmd,bool $hasMultipleReturn=false,bool $prepare=false,string $bindTypesString="",array $prepareStatements=array(),bool $retExecuteRet=false) {
+function functionExSQL($dbInstance,string $sqlcmd,bool $hasMultipleReturn=false,bool $prepare=false,string $bindTypesString="",array $prepareStatements=array(),bool $retExecuteRet=false,bool $yieldRetID=false) {
     if ($prepare == true) {
         // We Create a stmt (statement) and use the mysqli.prepare method on it to load it as a prepared-statement
         $prepped_statement = $dbInstance->prepare($sqlcmd);
@@ -52,11 +52,16 @@ function functionExSQL($dbInstance,string $sqlcmd,bool $hasMultipleReturn=false,
         $prepped_statement->bind_param(...$bindParams);
         // Execute the prepared statement (Same as query)
         $executeReturn = $prepped_statement->execute();
+        $insertedId = $prepped_statement->insert_id;
         // If enabled return the value now as boolean
         if ($retExecuteRet == true) {
             $toRet = false;
             if ($executeReturn === TRUE) {
-                $toRet = true;
+                if ($yieldRetID == true) {
+                    $toRet = $insertedId;
+                } else {
+                    $toRet = true;
+                }
             }
             // Close the statement connection since we don't need this connection to our SQL database.
             $prepped_statement->close();
@@ -282,6 +287,15 @@ function setPostData($dbInstance,$postTable,int $postID,string $header=null,stri
     $result = functionExSQL($dbInstance,$sql,False,True,$bindTypes,$bindParams,True);
 
     return $result;
+}
+
+function addPost($dbInstance,$postTable,string $header,string $content,int $authorID,int $contentType) {
+    $sqlcmd = "INSERT INTO " . $postTable . " (Header,Content,AuthorID,ContentType) VALUES (?,?,?,?)";
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"ssii",array($header,$content,$authorID,$contentType),True,True);
+}
+
+function remPost($dbInstance,$postTable,int $postID) {
+    $sqlcmd = "";
 }
 
 function getPostAccessees($dbInstance,$postTable,$accesseeTable,int $postID) {

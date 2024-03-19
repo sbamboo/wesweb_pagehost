@@ -16,6 +16,16 @@ if (isset($_SESSION["clientID"])) {
 } else {
     header("Location:signin.php");
 }
+
+# Check for internal-call meaning we have actions to do.
+if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
+    # Handle sending-mode delete-post
+    if (isset($_POST["sendingmode"]) && $_POST["sendingmode"] == "delete-post" && isset($_POST["editor-submit-remove"])) {
+        $postID = addPost($dbInstance,"posts","New post","Write content here...",$clientID,0);
+        $postData = getPostData($dbInstance,"posts",$postID);
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -53,6 +63,13 @@ if (isset($_SESSION["clientID"])) {
     <main class="flex-horiz">
         <div id="content-wrapper">
             <section id="customerpage-content" class="page-content">
+                <h2>Your posts</h2>
+                <div class="ui-smal-hdiv"></div>
+                <form method="POST" action="editor.php">
+                    <input type="hidden" name="internal-call" value="true">
+                    <input type="hidden" name="sendingmode" value="create-new">
+                    <input type="submit" name="submit-create-new" value="Create new">
+                </form>
                 <h2>Your posts</h2>
                 <div class="ui-smal-hdiv"></div>
                 <?php

@@ -34,10 +34,12 @@
 #editor-sidebar,#customerpage-sidebar {
     width: 27vw;
     border-left: 1px solid gray;
+    height: 100vh;
 }
 
 #editor-content,#customerpage-content {
     width: 73vw;
+    height: 100vh;
 }
 
 .comment-wrapper {

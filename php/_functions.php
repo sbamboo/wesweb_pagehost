@@ -295,7 +295,8 @@ function addPost($dbInstance,$postTable,string $header,string $content,int $auth
 }
 
 function remPost($dbInstance,$postTable,int $postID) {
-    $sqlcmd = "";
+    $sqlcmd = "DELETE FROM " . $postTable . " WHERE ID=?";
+    return functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($postID),True);
 }
 
 function getPostAccessees($dbInstance,$postTable,$accesseeTable,int $postID) {

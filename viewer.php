@@ -89,37 +89,39 @@ if ($postID != null) {
                     <h2>Comments:</h2>
                     <div class="ui-smal-hdiv"></div>
                     <?php
-                    function printComment($dbInstance,$commentTable,array $comment,int $startingIndent=0,int $indentBy=5) {
-                        echo '<div class="comment-wrapper" style="margin-left:'.$startingIndent.'px;">';
-                        $commentAuthorName = getClientNameFromID($dbInstance,$commentTable,$comment["AuthorID"]);
-                        $commentAuthorData = getClientData($dbInstance,$commentTable,$comment["AuthorID"]);
-                        echo '<div class="flex-vertic">';
-                        echo '    <div class="comment-author-wrapper flex-horiz">';
-                        if (!empty($commentAuthorData["ProfPic"])) {
-                            $base64_image = base64_encode($commentAuthorData["ProfPic"]);
-                            $mime_type = 'image/png';
-                            echo '<img src="data:' . $mime_type . ';base64,' . $base64_image . '" alt="User Profile Image">';
-                        }
-                        echo '        <b class="comment-author">'.$commentAuthorName.'</b>';
-                        echo '    </div>';
-                        echo '    <p class="comment-content">'.str_replace("\n","<br>",$comment["Content"]).'</p>';
-                        echo '</div>';
-                        if (isset($comment["subComments"]) && !empty($comment["subComments"])) {
-                            echo '<div class="subcomment-wrapper">';
-                            foreach($comment["subComments"] as $subcomment) {
-                                printComment($dbInstance,$commentTable,$subcomment,$startingIndent+$indentBy,$indentBy);
+                    if ($postID != null) {
+                        function printComment($dbInstance,$commentTable,array $comment,int $startingIndent=0,int $indentBy=5) {
+                            echo '<div class="comment-wrapper" style="margin-left:'.$startingIndent.'px;">';
+                            $commentAuthorName = getClientNameFromID($dbInstance,$commentTable,$comment["AuthorID"]);
+                            $commentAuthorData = getClientData($dbInstance,$commentTable,$comment["AuthorID"]);
+                            echo '<div class="flex-vertic">';
+                            echo '    <div class="comment-author-wrapper flex-horiz">';
+                            if (!empty($commentAuthorData["ProfPic"])) {
+                                $base64_image = base64_encode($commentAuthorData["ProfPic"]);
+                                $mime_type = 'image/png';
+                                echo '<img src="data:' . $mime_type . ';base64,' . $base64_image . '" alt="User Profile Image">';
+                            }
+                            echo '        <b class="comment-author">'.$commentAuthorName.'</b>';
+                            echo '    </div>';
+                            echo '    <p class="comment-content">'.str_replace("\n","<br>",$comment["Content"]).'</p>';
+                            echo '</div>';
+                            if (isset($comment["subComments"]) && !empty($comment["subComments"])) {
+                                echo '<div class="subcomment-wrapper">';
+                                foreach($comment["subComments"] as $subcomment) {
+                                    printComment($dbInstance,$commentTable,$subcomment,$startingIndent+$indentBy,$indentBy);
+                                }
+                                echo '</div>';
                             }
                             echo '</div>';
                         }
-                        echo '</div>';
-                    }
-                    $commentTree = getCommentTree($dbInstance,"comments", $postID);
-                    if (count($commentTree) > 0 ) {
-                        foreach ($commentTree as $comment) {
-                            printComment($dbInstance,"users",$comment,0,15);
+                        $commentTree = getCommentTree($dbInstance,"comments", $postID);
+                        if (count($commentTree) > 0 ) {
+                            foreach ($commentTree as $comment) {
+                                printComment($dbInstance,"users",$comment,0,15);
+                            }
+                        } else {
+                            echo '<div id="no-comments-msg"><p>No comments yet!</p></div>';
                         }
-                    } else {
-                        echo '<div id="no-comments-msg"><p>No comments yet!</p></div>';
                     }
                     ?>
                 </div>

@@ -21,8 +21,16 @@ if (isset($_SESSION["clientID"])) {
 if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
     # Handle sending-mode delete-post
     if (isset($_POST["sendingmode"]) && $_POST["sendingmode"] == "delete-post" && isset($_POST["editor-submit-remove"])) {
-        $postID = addPost($dbInstance,"posts","New post","Write content here...",$clientID,0);
-        $postData = getPostData($dbInstance,"posts",$postID);
+        $postID = $_POST["postID"];
+        remPost($dbInstance,"posts",$postID);
+    }
+    # Handle sending-mode update
+    if (isset($_POST["sendingmode"]) && $_POST["sendingmode"] == "update" && isset($_POST["update-clientdata"])) {
+        $username_i = $_POST["username"];
+        $dispname_i = $_POST["dispname"];
+        $password_i = $_POST["password"];
+        $clientID_i = $_POST["clientID"];
+        setClientData($dbInstance,"users",$clientID_i,$username_i,$password_i,$dispname_i,null);
     }
 }
 
@@ -136,6 +144,7 @@ if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
                     }
                     echo '<input type="hidden" name="internal-call" value="true">';
                     echo '<input type="hidden" name="sendingmode" value="update">';
+                    echo '<input type="hidden" name="clientID" value="'.$clientID.'"><br>';
                     echo '<label>Username:</label><input type="text" name="username" value="'.$clientData["Username"].'"><br>';
                     echo '<label>Password:</label><input type="text" name="password" value="'.$clientData["Password"].'"><br>';
                     echo '<label>Display Name:</label><input type="text" name="dispname" value="'.$clientData["DispName"].'"><br>';

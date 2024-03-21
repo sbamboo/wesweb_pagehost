@@ -56,6 +56,7 @@ function functionExSQL($dbInstance,string $sqlcmd,bool $hasMultipleReturn=false,
         // If enabled return the value now as boolean
         if ($retExecuteRet == true) {
             $toRet = false;
+            echo $executeReturn;
             if ($executeReturn === TRUE) {
                 if ($yieldRetID == true) {
                     $toRet = $insertedId;
@@ -102,6 +103,15 @@ function getClientIDFromName($dbInstance,$userTable, string $username) {
     $sqlcmd = "SELECT ID FROM " . $userTable . " WHERE Username=?";
     
     $result = functionExSQL($dbInstance,$sqlcmd,False,True,"s",array($username));
+
+    // Retrive result
+    return $result["ID"];
+} # returns dispname if set otherwise username
+
+function getClientIDFromDispName($dbInstance,$userTable, string $dispname) {
+    $sqlcmd = "SELECT ID FROM " . $userTable . " WHERE DispName=?";
+    
+    $result = functionExSQL($dbInstance,$sqlcmd,False,True,"s",array($dispname));
 
     // Retrive result
     return $result["ID"];

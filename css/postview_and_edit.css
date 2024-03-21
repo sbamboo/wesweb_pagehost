@@ -82,3 +82,13 @@
     border-top: none;
     padding-top: none;
 }
+
+#accessees-panel {
+    display: block;
+    margin-left: 3%;
+    margin-right: 3%;
+}
+
+.editor-accessee-list-item-removebtn {
+    margin-left: 10px;
+}

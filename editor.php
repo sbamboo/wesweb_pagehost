@@ -34,6 +34,22 @@ if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
         $postID = addPost($dbInstance,"posts","New post","Write content here...",$clientID,0);
         $postData = getPostData($dbInstance,"posts",$postID);
     }
+    # Handle sending-mode add-accessee
+    if (isset($_POST["sendingmode"]) && $_POST["sendingmode"] == "add-accessee" && isset($_POST["editor-accesee-name-submit"])) {
+        $input = $_POST["editor-accessee-name-input"];
+        if (strpos($input, "id:") !== false) {
+            $input = str_replace("id:","",$input);
+            $id = intval($input);
+        } else {
+            $id = getClientIDFromDispName($dbInstance,"users",$input);
+        }
+        addPostAccessee($dbInstance,"accessee",$postID,$id);
+    }
+    # Handle sending-mode rem-accessee
+    if (isset($_POST["sendingmode"]) && $_POST["sendingmode"] == "rem-accessee" && isset($_POST["editor-accessee-list-item-submit"])) {
+        $accesseeID = $_POST["accesseeid"];
+        remPostAccessee($dbInstance,"accessee",$postID,$accesseeID);
+    }
 }
 
 ?>
@@ -48,6 +64,8 @@ if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/ui.css">
     <link rel="stylesheet" href="./css/postview_and_edit.css">
+    <script src="./js/serviceconnect.js"></script>
+    <script src="./js/editor-handle-accessees.js"></script>
 </head>
 <body>
     <header>
@@ -114,6 +132,56 @@ if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
                         echo '</div>';
                         echo '<div id="content-author-info"><p>'.$choosenName.'</p></div>';
                         echo '</div></div>';
+                        # accessees panel
+                        echo <<<EOT
+                        <div class="sized-divider-midtext"></div>
+                        <div id="accessees-panel">                    
+                            <script>
+                                window.onload = () => {
+                                    populateAccessees($postID);
+                                    populateAccesseeActionButtons($postID);
+                                };
+                            </script>
+                            <h3>Others who have access:</h3>
+                            <div class="sized-divider-midtext divider-color-2"></div>
+                            <div id="js-fillable_post-accessees" class="js-fillable"></div>
+                            <div class="sized-divider-midtext divider-color-2"></div>
+                            <div id="js-fillable_accessee-actionbuttons" class="js-fillable flex-horiz"></div>
+                        </div>
+                        EOT;
+                        /*echo <<<EOT
+                        <div class="sized-divider-midtext"></div>
+                        <div id="accessees-panel">
+                            <h3>Others who have access:</h3>
+                            <div class="sized-divider-midtext divider-color-2"></div>
+                            <div id="post-accessees">
+                        EOT;
+                        $accesees = getPostAccessees($dbInstance,"posts","accessees",$postID);
+                        foreach ($accesees as $accesee) {
+                            $accesseeName = getClientNameFromID($dbInstance,"users",$accesee);
+                            echo <<<EOT
+                            <div class="editor-accessee-list-item flex-horiz">
+                                <p class="editor-accessee-list-item-name">$accesseeName (ID: $accesee)</p>
+                                <form method="POST" action="editor.php">
+                                    <input type="hidden" name="internal-call" value="true">
+                                    <input type="hidden" name="sendingmode" value="rem-accesee">
+                                    <input type="hidden" name="acceseeid" value="$accesee">
+                                    <input type="button" class="editor-accessee-list-item-removebtn" name="editor-accessee-list-item-submit" value="Remove">
+                                </form>
+                            </div>
+                            EOT;
+                        }
+                        echo '</div><div class="sized-divider-midtext divider-color-2"></div>';
+                        echo <<<EOT
+                            <div id="accessee-actionbuttons" class="flex-horiz">
+                                <form method="POST" action="editor.php">
+                                    <input type="hidden" name="internal-call" value="true">
+                                    <input type="hidden" name="sendingmode" value="add-accesee">
+                                    <input type="text" name="editor-accessee-name-input">
+                                    <input type="button" name="editor-accesee-name-submit" value="Add accessee">
+                                </form>
+                        EOT;
+                        echo '</div></div>';*/
                     }
                 }
                 ?>

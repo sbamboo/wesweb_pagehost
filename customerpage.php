@@ -71,7 +71,7 @@ if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
     <main class="flex-horiz">
         <div id="content-wrapper">
             <section id="customerpage-content" class="page-content">
-                <h2>Your posts</h2>
+                <h2>Create new post</h2>
                 <div class="ui-smal-hdiv"></div>
                 <form method="POST" action="editor.php">
                     <input type="hidden" name="internal-call" value="true">

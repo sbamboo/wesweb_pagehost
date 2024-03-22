@@ -6,6 +6,8 @@ $sqlargs = array("localhost","root","","pagehost");
 # Create connectionInstances
 $conRet = validateDBConnection( connectDB($sqlargs) );
 if (is_string($conRet)) { echo $conRet;$dbInstance=null; } else { $dbInstance = $conRet; }
+
+session_start();
 ?>
 
 <!DOCTYPE html>
@@ -32,7 +34,13 @@ if (is_string($conRet)) { echo $conRet;$dbInstance=null; } else { $dbInstance = 
             <div id="button-wrapper">
                 <div id="nav-login">
                     <div class="ui-button ui-size-button-big">
-                        <a href="./signin.php?login">Login</a>
+                        <?php
+                            if (isset($_SESSION["clientID"])) {
+                                echo'<a href="./signin.php?login">Personal Page</a>';
+                            } else {
+                                echo'<a href="./signin.php?login">Login</a>';
+                            }
+                        ?>
                     </div>
                 </div>
             </div>
@@ -65,7 +73,38 @@ if (is_string($conRet)) { echo $conRet;$dbInstance=null; } else { $dbInstance = 
             <section id="private-posts">
                 <h2>Private-Posts</h2>
                 <div class="ui-smal-hdiv"></div>
-                <p>To view private posts please login!</p>
+                <?php
+                    if (isset($_SESSION["clientID"])) {
+                        # Get posts
+                        $posts = getPostsByClient($dbInstance,"posts",$_SESSION["clientID"]);
+                        if (count($posts) < 1) {
+                            echo <<<EOT
+                            <form method="POST" action="editor.php">
+                                <input type="hidden" name="internal-call" value="true">
+                                <input type="hidden" name="sendingmode" value="create-new">
+                                <label>Oh looks like you haven't posted anything yet? </label><input type="submit" name="submit-create-new" value="Create new">
+                            </form>
+                            EOT;
+                        } else {
+                            foreach ($posts as $post) {
+                                $postHeader = $post["Header"];
+                                $postID = $post["ID"];
+                                $postAuthor = getClientNameFromID($dbInstance,"users",$post["AuthorID"]);
+                                echo <<<EOT
+                                <div class="post-link">
+                                    <form  action="viewer.php" method="POST">
+                                        <input type="hidden" name="postsel_id" value="$postID">
+                                        <input class="styled-form-btn-to-a" type="submit" name="postsel_submit" value="$postHeader">
+                                        <label>by $postAuthor</label>
+                                    </form>
+                                </div>
+                                EOT;
+                            }
+                        }
+                    } else {
+                        echo '<p>To view private posts please login!</p>';
+                    }
+                ?>
             </section>
         </div>
     </main>

@@ -76,6 +76,7 @@
     padding-bottom: none;
     height: 20px;
     overflow: hidden;
+    min-height: 37px;
 }
 .editor-edit-content {
     height: 70vh;

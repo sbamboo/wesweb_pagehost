@@ -1,6 +1,7 @@
 <?php
 # Link requirements
 require("php/_functions.php");
+require("php/libs/Parsedown.php");
 # Define sql-arguments
 $sqlargs = array("localhost","root","","pagehost");
 # Create connectionInstances
@@ -65,7 +66,53 @@ if ($postID != null) {
                         # main content
                         echo '<div id="content-main">';
                         echo "<h2>".$postData["Header"].'</h2>';
-                        echo str_replace("\n","<br>",$postData["Content"]);
+                        echo "<p>" . str_replace("\n","<br>",htmlspecialchars($postData["Content"])) . "</p>";
+                        echo '</div>';
+                        # author panel
+                        echo '<div class="sized-divider-midtext"></div><div id="content-author" class="flex-horiz"><h3 id="content-author-info-preline">Written by: </h3><div id="content-author-innerwrapper" class="flex-horiz">';
+                        echo '<div id="content-author-img-wrapper">';
+                        if (!empty($postAuthorData["ProfPic"])) {
+                            $base64_image = base64_encode($postAuthorData["ProfPic"]);
+                            $mime_type = 'image/png';
+                            echo '<img src="data:' . $mime_type . ';base64,' . $base64_image . '" alt="User Profile Image">';
+                        }
+                        echo '</div>';
+                        echo '<div id="content-author-info"><p>'.$choosenName.'</p></div>';
+                        echo '</div></div>';
+                    }
+                    # Markdown-ContentType
+                    if ($postData["ContentType"] == 1) {
+                        # getdata
+                        $postAuthorData = getClientData($dbInstance,"users",$postData["AuthorID"]);
+                        $choosenName = getClientNameFromID($dbInstance,"users",$postData["AuthorID"]);
+                        # main content
+                        echo '<div id="content-main">';
+                        echo "<h2>".$postData["Header"].'</h2>';
+                        echo Parsedown::instance()->text($postData["Content"]);  // UNSAFE!
+                        echo '</div>';
+                        # author panel
+                        echo '<div class="sized-divider-midtext"></div><div id="content-author" class="flex-horiz"><h3 id="content-author-info-preline">Written by: </h3><div id="content-author-innerwrapper" class="flex-horiz">';
+                        echo '<div id="content-author-img-wrapper">';
+                        if (!empty($postAuthorData["ProfPic"])) {
+                            $base64_image = base64_encode($postAuthorData["ProfPic"]);
+                            $mime_type = 'image/png';
+                            echo '<img src="data:' . $mime_type . ';base64,' . $base64_image . '" alt="User Profile Image">';
+                        }
+                        echo '</div>';
+                        echo '<div id="content-author-info"><p>'.$choosenName.'</p></div>';
+                        echo '</div></div>';
+                    }
+                    # HTML-ContentType
+                    if ($postData["ContentType"] == 2) {
+                        # getdata
+                        $postAuthorData = getClientData($dbInstance,"users",$postData["AuthorID"]);
+                        $choosenName = getClientNameFromID($dbInstance,"users",$postData["AuthorID"]);
+                        # main content
+                        echo '<div id="content-main">';
+                        echo "<h2>".$postData["Header"].'</h2>';
+                        echo '<div id="wrapperbody">';
+                        echo $postData["Content"]; // UNSAFE!
+                        echo '</div>';
                         echo '</div>';
                         # author panel
                         echo '<div class="sized-divider-midtext"></div><div id="content-author" class="flex-horiz"><h3 id="content-author-info-preline">Written by: </h3><div id="content-author-innerwrapper" class="flex-horiz">';

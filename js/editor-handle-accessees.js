@@ -7,6 +7,7 @@ parts.push("php/_serviceworker.php");
 const servWorkURL = parts.join("/");
 
 function populateAccessees(postID) {
+    console.log(postID);
     // get element
     parent2 = document.getElementById("js-fillable_post-accessees");
     parent2.innerHTML = "";

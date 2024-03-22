@@ -93,10 +93,14 @@ function getClientNameFromID($dbInstance,$userTable, int $clientID) {
     $result = functionExSQL($dbInstance,$sqlcmd,False,True,"i",array($clientID));
 
     // Retrive result
-    if (in_array("DispName",array_keys($result)) && $result["DispName"] != "" && $result["DispName"] != null) {
-        return $result["DispName"];
+    if ($result != null) {
+        if (in_array("DispName",array_keys($result)) && $result["DispName"] != "" && $result["DispName"] != null) {
+            return $result["DispName"];
+        }
+        return $result["Username"];
+    } else {
+        return "Missing User";
     }
-    return $result["Username"];
 } # returns dispname if set otherwise username
 
 function getClientIDFromName($dbInstance,$userTable, string $username) {
@@ -310,7 +314,7 @@ function remPost($dbInstance,$postTable,int $postID) {
 }
 
 function getPostAccessees($dbInstance,$postTable,$accesseeTable,int $postID) {
-    $sqlcmd = "SELECT " . $accesseeTable . ".UserID AS ID FROM " . $accesseeTable . " JOIN " . $postTable . " WHERE " . $postTable . ".ID=?";
+    $sqlcmd = "SELECT " . $accesseeTable . ".UserID AS ID FROM " . $accesseeTable . " JOIN " . $postTable . " WHERE " . $accesseeTable . ".PostID=?";
     
     // Get the result from the query.
     $results = functionExSQL($dbInstance,$sqlcmd,True,True,"i",array($postID));

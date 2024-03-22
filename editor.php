@@ -98,7 +98,7 @@ if (isset($_POST["internal-call"]) && $_POST["internal-call"] == "true") {
                 <?php
                 if ($postID != null) {
                     # Text-ContentType
-                    if ($postData["ContentType"] == 0) {
+                    if ($postData["ContentType"] == 0 || $postData["ContentType"] == 1 || $postData["ContentType"] == 2) {
                         # getdata
                         $postAuthorData = getClientData($dbInstance,"users",$postData["AuthorID"]);
                         $choosenName = getClientNameFromID($dbInstance,"users",$postData["AuthorID"]);
